@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>顧客關係管理 CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<style>
+:root{
+  --paper:#FBFCFE; --sky:#E8F0FF; --ink:#16213A; --ink-2:#4B5675;
+  --cobalt:#1F4FD8; --amber:#F2A93B; --mint:#19A89A; --rose:#E0567A;
+  --glass:rgba(255,255,255,.72); --line:rgba(22,33,58,.12);
+  font-size:clamp(13px,1.12vw,21px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color:var(--ink); background:var(--paper); overflow:hidden; line-height:1.55;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(60vw 60vw at 90% -10%, #DCE8FF 0%, transparent 60%),
+    radial-gradient(50vw 50vw at -10% 110%, #FFF1D6 0%, transparent 60%),
+    var(--paper);
+}
+#deck{position:relative;width:100vw;height:100vh}
+.slide{
+  position:absolute; inset:0; padding:4.5rem 6rem 4rem; display:none;
+  flex-direction:column; overflow:auto;
+}
+.slide.active{display:flex;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide.active{animation:none}}
+
+/* typography */
+h1{font-size:2.55rem;font-weight:900;line-height:1.3;letter-spacing:.01em;margin-bottom:1.6rem;align-self:flex-start}
+h1 .hl{background:linear-gradient(transparent 58%,rgba(242,169,59,.6) 58%,rgba(242,169,59,.6) 94%,transparent 94%);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .15em}
+h2{font-size:1.75rem;font-weight:700;margin:.4rem 0 .6rem}
+p,li,td,th{font-size:1.32rem}
+.lead{font-size:1.55rem;font-weight:500;line-height:1.65;max-width:38em}
+.quote{font-size:1.45rem;line-height:1.75;border-left:.45rem solid var(--cobalt);padding:.4em 1.2em;background:var(--glass);border-radius:0 1rem 1rem 0;max-width:42em}
+.small{font-size:1rem;color:var(--ink-2)}
+.muted{color:var(--ink-2)}
+ul{padding-left:1.4em}
+li{margin:.3em 0}
+strong{font-weight:700}
+.row{display:flex;gap:2rem;align-items:flex-start}
+.row>*{flex:1;min-width:0}
+.col{display:flex;flex-direction:column;gap:1rem}
+.center{align-items:center;justify-content:center;text-align:center}
+.center h1{align-self:center}
+.grow{flex:1;min-height:0}
+
+/* glass cards */
+.card{
+  background:var(--glass); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.9); box-shadow:0 10px 40px rgba(31,79,216,.08);
+  border-radius:1.4rem; padding:1.4rem 1.7rem;
+}
+.card h2{margin-top:0}
+.row.grow>.card{overflow:auto;min-height:0}
+.row.grow>.col>.card{flex-shrink:1;min-height:0;overflow:auto}
+.card.cobalt{background:linear-gradient(135deg,#2A5BE8,#1F4FD8);color:#fff;border:none}
+.card.cobalt .muted{color:#D8E2FF}
+.card.amber{background:linear-gradient(135deg,#FFE3A8,#FFD27A);border:none}
+.card.mint{background:linear-gradient(135deg,#CFF4EE,#A9EBE2);border:none}
+
+/* tables */
+table{border-collapse:separate;border-spacing:0;width:100%;background:var(--glass);border-radius:1.2rem;overflow:hidden;border:1px solid rgba(255,255,255,.9);box-shadow:0 10px 40px rgba(31,79,216,.08)}
+th,td{padding:.7em 1em;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{background:rgba(31,79,216,.1);font-weight:700}
+tr:last-child td{border-bottom:none}
+table.compact th,table.compact td{font-size:1.05rem;padding:.5em .8em}
+table.dense th,table.dense td{font-size:.95rem;padding:.4em .7em}
+
+/* images & video */
+.img{max-width:100%;max-height:100%;object-fit:contain;border-radius:1.2rem;box-shadow:0 14px 50px rgba(22,33,58,.14);background:#fff}
+.figure{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;min-height:0}
+.figure img{max-height:100%}
+.video{position:relative;width:min(100%,62vw);aspect-ratio:16/9;margin:0 auto;border-radius:1.3rem;overflow:hidden;box-shadow:0 20px 60px rgba(22,33,58,.2);background:#000}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.imgfail{display:flex;align-items:center;justify-content:center;padding:2rem;border:2px dashed var(--line);border-radius:1rem;color:var(--ink-2);font-size:1.1rem}
+
+/* chips, buttons */
+.btn{font:inherit;font-size:1.25rem;font-weight:700;padding:.6em 1.4em;border-radius:999px;border:none;cursor:pointer;background:var(--cobalt);color:#fff;box-shadow:0 8px 24px rgba(31,79,216,.25);transition:transform .12s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:#fff;color:var(--cobalt);border:2px solid var(--cobalt);box-shadow:none}
+.btn.amber{background:var(--amber);color:var(--ink)}
+.btn.mint{background:var(--mint)}
+.btn:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+.pill{display:inline-block;padding:.2em .8em;border-radius:999px;background:rgba(31,79,216,.12);color:var(--cobalt);font-weight:700;font-size:1.05rem}
+
+/* chrome */
+#progress{position:fixed;top:0;left:0;height:.35rem;background:linear-gradient(90deg,var(--cobalt),var(--mint));width:0;z-index:50;transition:width .3s}
+#counter{position:fixed;bottom:1.2rem;right:1.6rem;font-size:1rem;color:var(--ink-2);z-index:50;background:var(--glass);padding:.3em .9em;border-radius:999px;backdrop-filter:blur(8px)}
+#brand{position:fixed;bottom:1.1rem;left:1.6rem;z-index:50;height:2rem;opacity:.85}
+.nav{position:fixed;top:50%;transform:translateY(-50%);z-index:50;width:3rem;height:3rem;border-radius:50%;border:none;background:var(--glass);backdrop-filter:blur(8px);cursor:pointer;font-size:1.4rem;color:var(--ink-2);opacity:.6;transition:opacity .2s}
+.nav:hover{opacity:1}
+#prev{left:1rem}#next{right:1rem}
+.hint{position:fixed;top:1rem;right:1.6rem;font-size:.9rem;color:var(--ink-2);z-index:50;opacity:.7}
+
+/* section divider */
+.section{justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,#1F4FD8 0%,#2E6BFF 60%,#19A89A 100%);color:#fff}
+.section h1{font-size:4rem;color:#fff;align-self:center}
+.section h1::after{opacity:.9}
+.section p{font-size:1.6rem;color:#D8E2FF;max-width:30em}
+
+/* specific widgets */
+.stat{font-size:5rem;font-weight:900;line-height:1;color:var(--cobalt)}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+.steps .card{position:relative;padding-top:2.2rem}
+.steps .card::before{counter-increment:s;content:counter(s);position:absolute;top:-1rem;left:1.4rem;width:2.4rem;height:2.4rem;border-radius:50%;background:var(--cobalt);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 6px 18px rgba(31,79,216,.3)}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:1.5rem;align-items:center}
+.vs .mid{font-size:3rem;font-weight:900;color:var(--amber)}
+.bigword{font-size:3.4rem;font-weight:900;color:var(--cobalt);line-height:1}
+
+/* text-chain animation */
+#chain{font-size:2.6rem;font-weight:700;min-height:1.6em}
+#chain .cursor{display:inline-block;width:.08em;height:1em;background:var(--cobalt);vertical-align:-.15em;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.cands{display:flex;flex-direction:column;gap:1rem;max-width:34rem}
+.cand{display:grid;grid-template-columns:5rem 1fr 5rem;align-items:center;gap:1rem;font-size:1.5rem;font-weight:700}
+.bar{height:1.4rem;background:rgba(31,79,216,.12);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--cobalt);border-radius:999px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.cand.win .bar>i{background:var(--mint)}
+.cand.win{color:var(--mint)}
+
+/* vote */
+.votebox{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:1rem}
+.votebtn{font:inherit;font-size:2rem;font-weight:900;padding:1.4em 1em;border-radius:1.5rem;border:none;cursor:pointer;color:#fff;box-shadow:0 14px 40px rgba(22,33,58,.15);transition:transform .12s}
+.votebtn:active{transform:scale(.96)}
+.votebtn.a{background:linear-gradient(135deg,#2A5BE8,#4D7CFF)}
+.votebtn.b{background:linear-gradient(135deg,#19A89A,#3FC7B7)}
+.votebtn small{display:block;font-size:1.1rem;font-weight:500;opacity:.9;margin-top:.3em}
+.result{margin-top:1.5rem}
+.result .r{display:grid;grid-template-columns:7rem 1fr 6rem;gap:1rem;align-items:center;font-size:1.3rem;font-weight:700;margin:.5rem 0}
+.result .bar{height:1.6rem}
+#voteBadge{position:absolute;top:1.6rem;right:2rem;background:var(--glass);backdrop-filter:blur(10px);border:1px solid #fff;border-radius:1.2rem;padding:.8rem 1.2rem;font-size:1.05rem;box-shadow:0 10px 30px rgba(31,79,216,.12);min-width:16rem}
+#voteBadge b{font-size:1.2rem}
+
+/* chem game */
+.chem{display:grid;grid-template-columns:16rem 1fr 18rem;gap:1.4rem;flex:1;min-height:0}
+.atoms{display:flex;flex-direction:column;gap:.9rem}
+.atom{width:4.2rem;height:4.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.6rem;color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.18);cursor:grab;user-select:none;border:3px solid #fff}
+.atom.C{background:#2E2E3A}.atom.H{background:#4D7CFF}.atom.O{background:#E0567A}
+.atombtn{display:flex;align-items:center;gap:.8rem;background:none;border:none;cursor:pointer;font:inherit;font-size:1.15rem;color:var(--ink)}
+#bench{position:relative;background:repeating-linear-gradient(0deg,transparent 0 23px,rgba(31,79,216,.06) 23px 24px),repeating-linear-gradient(90deg,transparent 0 23px,rgba(31,79,216,.06) 23px 24px),#fff;border-radius:1.4rem;border:1px solid var(--line);overflow:hidden;min-height:18rem;touch-action:none}
+#bench .atom{position:absolute;cursor:grab}
+#bench .atom.dragging{cursor:grabbing;transform:scale(1.08);z-index:5}
+.targets{display:flex;flex-direction:column;gap:.7rem}
+.target{text-align:left;font:inherit;font-size:1.15rem;padding:.7em 1em;border-radius:1rem;border:2px solid var(--line);background:#fff;cursor:pointer}
+.target.sel{border-color:var(--cobalt);background:rgba(31,79,216,.08)}
+.target.done{border-color:var(--mint);background:rgba(25,168,154,.12)}
+.formula{font-size:1.9rem;font-weight:900;letter-spacing:.03em}
+.formula sub{font-size:.6em}
+#chemMsg{min-height:2.5em;font-size:1.15rem;font-weight:700}
+
+/* CLT */
+.clt{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;flex:1;min-height:0}
+.clt .card{display:flex;flex-direction:column;padding:1rem 1.1rem}
+.clt canvas{width:100%;height:auto;max-height:50vh;object-fit:contain;flex:1;min-height:0;border-radius:.6rem;background:#fff}
+.sliderrow{display:flex;align-items:center;gap:1.4rem;margin-bottom:1rem}
+.sliderrow input[type=range]{flex:1;accent-color:var(--cobalt);height:1.2rem}
+#nval{font-size:2.4rem;font-weight:900;color:var(--cobalt);min-width:6rem}
+
+/* quiz */
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1.5rem}
+.opt{font:inherit;font-size:2rem;font-weight:900;padding:1.2em .6em;border-radius:1.4rem;border:3px solid var(--line);background:#fff;cursor:pointer;transition:transform .12s,background .2s}
+.opt span{display:block;font-size:1rem;font-weight:500;color:var(--ink-2)}
+.opt:hover{transform:translateY(-3px)}
+.opt.right{background:#DDF7EE;border-color:var(--mint);animation:pop .5s}
+.opt.wrong{background:#FFE1E8;border-color:var(--rose);animation:shake .4s}
+@keyframes pop{30%{transform:scale(1.08)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+#quizMsg{font-size:1.6rem;font-weight:700;margin-top:1.2rem;min-height:1.8em}
+
+/* slot */
+.slot{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.reel{width:22rem;height:5rem;overflow:hidden;border-radius:1.2rem;background:#fff;border:4px solid var(--amber);box-shadow:inset 0 0 30px rgba(0,0,0,.08);position:relative}
+.reel ul{list-style:none;padding:0;position:absolute;left:0;right:0;top:0}
+.reel li{height:5rem;display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:900;margin:0}
+.reel::before,.reel::after{content:"";position:absolute;left:0;right:0;height:1.4rem;z-index:2;pointer-events:none}
+.reel::before{top:0;background:linear-gradient(#fff,transparent)}
+.reel::after{bottom:0;background:linear-gradient(transparent,#fff)}
+
+.twocol{columns:2;column-gap:2.5rem}
+.twocol>*{break-inside:avoid}
+.qr{display:grid;grid-template-columns:1fr 1fr;gap:3rem;text-align:center;margin-top:1rem}
+.qr img{width:13rem;height:13rem;border-radius:1rem;background:#fff;padding:.5rem;box-shadow:0 10px 30px rgba(22,33,58,.1)}
+.qr b{display:block;font-size:1.3rem;margin-top:.6rem}
+.menu{display:flex;gap:.5rem;align-items:center;font-size:1.1rem}
+.kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:3px;border-radius:.4em;padding:0 .4em;background:#fff;font-size:.9em}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+.num{display:inline-flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:var(--cobalt);color:#fff;font-weight:900;font-size:1.15rem;margin-right:.6rem;flex-shrink:0}
+.principle{display:flex;gap:.8rem;align-items:flex-start}
+.principle p{font-size:1.1rem}
+.principle b{font-size:1.25rem;display:block;margin-bottom:.2em}
+.excel{display:flex;align-items:center;gap:.9rem;background:linear-gradient(135deg,#1D6F42,#2E9E5B);color:#fff;border-radius:1.2rem;padding:1rem 1.5rem;font-size:1.4rem;font-weight:900;box-shadow:0 10px 30px rgba(29,111,66,.25)}
+.excel span{font-size:2rem}
+.figure .img{max-width:100%}
+code{font-family:Consolas,Menlo,monospace;background:rgba(31,79,216,.1);padding:.1em .4em;border-radius:.4em;font-size:.95em}
+.tex{font-size:1.5rem}
+
+.codebox{position:relative;background:#1E2537;color:#E8EDF7;border-radius:1.2rem;padding:1.3rem 1.5rem;font-family:Consolas,Menlo,"Noto Sans TC",monospace;font-size:1.02rem;line-height:1.6;white-space:pre-wrap;overflow:auto;box-shadow:0 14px 40px rgba(22,33,58,.2);flex:1;min-height:0}
+.codebox .copy{position:absolute;top:.8rem;right:.9rem;font:inherit;font-family:"Noto Sans TC",sans-serif;font-size:.9rem;font-weight:700;background:var(--amber);color:var(--ink);border:none;border-radius:999px;padding:.35em 1em;cursor:pointer}
+.promptlabel{display:inline-flex;align-items:center;gap:.6rem;font-weight:900;font-size:1.3rem;color:var(--cobalt);margin-bottom:.8rem}
+.promptlabel i{font-style:normal;background:var(--cobalt);color:#fff;border-radius:.6rem;padding:.15em .6em;font-size:1rem}
+</style>
+<body>
+<div id="progress"></div>
+<div class="hint">← → 或空白鍵換頁</div>
+<button class="nav" id="prev" aria-label="上一頁">‹</button>
+<button class="nav" id="next" aria-label="下一頁">›</button>
+<img id="brand" src="https://ai4taiwan.org.tw/wp-content/uploads/2025/04/ai4taiwan_long.svg" alt="AI for Taiwan">
+<div id="counter">1 / 1</div>
+
+<div id="deck">
+
+<!-- 1 封面 -->
+<section class="slide center">
+  <img src="https://ai4taiwan.org.tw/wp-content/uploads/2025/04/ai4taiwan_long.svg" alt="AI for Taiwan" style="height:4rem;margin-bottom:2.5rem">
+  <h1 style="font-size:4.4rem;line-height:1.35">顧客關係管理 CRM</h1>
+  <p class="lead" style="margin-top:1rem">講者：AI for Taiwan 副理事長　黃海潮 Eric</p>
+</section>
+
+<!-- 2 為什麼 -->
+<section class="slide center">
+  <h1>為什麼要有顧客關係管理</h1>
+  <div class="card" style="max-width:60rem;padding:2.2rem 2.6rem;text-align:left">
+    <p style="font-size:1.8rem;font-weight:900;color:var(--cobalt);margin-bottom:.8em">留住一個舊客的成本，遠低於開發一個新客。</p>
+    <p class="lead">而且舊客會回購、客單價更高、還會推薦別人。企業的利潤大部分來自少數忠誠顧客，而不是一次性的過路客。</p>
+    <p class="lead" style="margin-top:.8em"><b>CRM 就是把這群人找出來、留下來、經營好的系統性做法。</b></p>
+  </div>
+</section>
+
+<!-- 3 為什麼 1-3 -->
+<section class="slide">
+  <h1>為什麼要有顧客關係管理（1／2）</h1>
+  <div class="col grow" style="gap:1rem">
+    <div class="card principle"><span class="num">1</span><div><b>把顧客資料集中，不再散落各處</b><p>沒有 CRM 的時候，顧客資訊在業務的 Excel、客服的 email、老闆的腦袋裡。人一離職，關係就跟著走了。CRM 讓每一次互動（詢價、購買、客訴、拜訪）都記錄在同一個地方，任何人接手都能看到完整歷史。</p></div></div>
+    <div class="card principle"><span class="num">2</span><div><b>不用把所有顧客當成同一種人</b><p>透過消費頻率、金額、最近一次購買（RFM）等資料，可以區分出高價值客、潛力客、流失中的客，針對不同群體給不同的對待。對 VIP 給專屬服務，對快流失的客發挽回優惠，對不會再買的人就不要再浪費行銷預算。</p></div></div>
+    <div class="card principle"><span class="num">3</span><div><b>提升回購率與終身價值</b><p>記得顧客上次買什麼、偏好什麼，就能在對的時間推薦對的東西。生日優惠、耗材到期提醒、相關商品推薦，這些都需要「記得這個人」才做得到。顧客感覺被認得，就更願意回來。</p></div></div>
+  </div>
+</section>
+
+<!-- 4 為什麼 4-7 -->
+<section class="slide">
+  <h1>為什麼要有顧客關係管理（2／2）</h1>
+  <div class="grid2 grow" style="align-items:stretch">
+    <div class="card principle"><span class="num">4</span><div><b>讓業務流程看得見、管得到</b><p>從潛在客戶到成交的每個階段，進度、卡在哪裡、預估金額都在系統裡。主管不用靠問才知道狀況，業務也不會漏追客戶。預測營收時，也有依據而不是憑感覺。</p></div></div>
+    <div class="card principle"><span class="num">5</span><div><b>客服更快、更一致</b><p>客人打來時，客服馬上看到他是誰、買過什麼、上次抱怨過什麼，不用讓他從頭講一次。問題處理的紀錄也能累積成知識庫，減少重複犯錯。</p></div></div>
+    <div class="card principle"><span class="num">6</span><div><b>行銷可以衡量成效</b><p>哪個活動帶來多少名單、多少成交、多少營收，有資料才能算投資報酬率，把預算放到有效的地方。</p></div></div>
+    <div class="card principle"><span class="num">7</span><div><b>把經驗變成組織資產</b><p>成功的銷售話術、常見的客訴原因、各產業客戶的特性，這些原本只存在個人經驗裡的東西，透過 CRM 的紀錄可以被分析、被複製、被傳承。</p></div></div>
+  </div>
+</section>
+
+<!-- 5 靜態資料 -->
+<section class="slide">
+  <h1>顧客的靜態基本資料</h1>
+  <p class="quote" style="margin-bottom:1rem;font-size:1.25rem">指顧客本身相對固定、不會因為每次交易而改變的屬性。它描述的是<b>「這個顧客是誰」</b>，而不是「他做了什麼」。</p>
+  <div class="grid2 grow" style="align-items:stretch">
+    <div class="card"><h2>🪪 身份識別</h2><ul style="font-size:1.1rem"><li>姓名、性別、出生年月日</li><li>身分證字號或會員編號（唯一識別鍵）</li><li>國籍、語言</li></ul></div>
+    <div class="card"><h2>👥 人口統計</h2><ul style="font-size:1.1rem"><li>年齡（可由生日推算）、教育程度</li><li>職業、職稱、產業</li><li>婚姻狀況、家庭成員數、有無子女</li><li>收入區間</li></ul></div>
+    <div class="card"><h2>⚙️ 偏好與設定</h2><ul style="font-size:1.1rem"><li>偏好的聯絡管道與時段</li><li>行銷同意（是否願意收到 EDM、簡訊）</li><li>興趣標籤（自填的）</li></ul></div>
+    <div class="card"><h2>📍 來源與歸屬</h2><ul style="font-size:1.1rem"><li>加入日期、加入管道（門市、官網、活動）</li><li>所屬門市、負責業務</li><li>會員等級（嚴格說是半靜態，會隨消費調整）</li></ul></div>
+  </div>
+</section>
+
+<!-- 6 動態資料 -->
+<section class="slide">
+  <h1>顧客的動態交易資料</h1>
+  <p class="quote" style="margin-bottom:1rem;font-size:1.2rem">指顧客在與企業互動的過程中，隨時間不斷產生、累積的紀錄。描述的是<b>「做了什麼、什麼時候做、做了多少」</b>，每一筆都帶有時間戳記，一旦發生就不會改變，只會不斷增加。</p>
+  <div class="grid2 grow" style="align-items:stretch">
+    <div class="card"><h2>🛒 交易行為</h2><ul style="font-size:1.05rem"><li>購買紀錄：日期、商品、數量、金額、折扣、付款方式</li><li>退換貨紀錄</li><li>訂單狀態的變化（下單、付款、出貨、完成、取消）</li><li>使用優惠券、點數兌換</li></ul></div>
+    <div class="card"><h2>👣 瀏覽與互動行為（數位足跡）</h2><ul style="font-size:1.05rem"><li>網站或 App 的瀏覽頁面、停留時間、點擊路徑</li><li>搜尋關鍵字、加入購物車但未結帳</li><li>收藏、按讚、分享</li><li>Email 開信、點擊連結、廣告曝光與點擊</li></ul></div>
+    <div class="card"><h2>🙋 參與行為</h2><ul style="font-size:1.05rem"><li>活動報名與實際出席</li><li>會員登入頻率</li><li>推薦他人、分享邀請碼</li><li>社群互動</li></ul></div>
+    <div class="card"><h2>🎧 服務互動</h2><ul style="font-size:1.05rem"><li>客服來電、線上客服對話紀錄</li><li>客訴內容、處理過程、結案時間</li><li>維修、保固申請</li><li>問卷回覆、評論與評分</li></ul></div>
+  </div>
+</section>
+
+<!-- 7 RFM 模型 -->
+<section class="slide">
+  <h1>RFM 模型</h1>
+  <div class="row grow" style="align-items:center">
+    <table class="compact" style="flex:1.4">
+      <thead><tr><th>指標</th><th>問題</th><th>計算</th><th>代表意義</th></tr></thead>
+      <tbody>
+        <tr><td><b>Recency</b><br>最近性</td><td>上次買是多久以前？</td><td>分析基準日 − 該顧客最後一次購買日</td><td>數字越小越好。剛買過的人記憶猶新、關係還熱</td></tr>
+        <tr><td><b>Frequency</b><br>頻率</td><td>一段期間內買了幾次？</td><td>期間內的訂單數（或購買天數）</td><td>數字越大越好。反映忠誠度與習慣</td></tr>
+        <tr><td><b>Monetary</b><br>金額</td><td>一段期間內花了多少？</td><td>期間內的總消費金額（或平均客單價）</td><td>數字越大越好。反映貢獻度與購買力</td></tr>
+      </tbody>
+    </table>
+    <div class="figure" style="flex:1"><img class="img" src="https://frankchiu.io/wp-content/uploads/2026/05/scimg3qzWR1.webp" alt="RFM 圖片" style="max-height:62vh"></div>
+  </div>
+</section>
+
+<!-- 8 五等均分法 -->
+<section class="slide">
+  <h1>RFM 模型 ─ 五等均分法</h1>
+  <p class="lead" style="margin-bottom:1rem">每個指標各自排序後切成五等分，給 1 到 5 分。</p>
+  <div class="grid3" style="margin-bottom:1.2rem">
+    <div class="card"><div class="bigword" style="font-size:2.6rem">R</div><p><b>天數越少分數越高</b>（最近買的給 5）</p></div>
+    <div class="card"><div class="bigword" style="font-size:2.6rem">F</div><p><b>次數越多分數越高</b></p></div>
+    <div class="card"><div class="bigword" style="font-size:2.6rem">M</div><p><b>金額越多分數越高</b></p></div>
+  </div>
+  <div class="row grow">
+    <div class="card amber"><p><b>⚠️ 注意：</b>Frequency 常常有大量相同值（例如很多人只買 1 次），用五分位會切不開，可以改用<b>固定門檻</b>（1 次 = 1 分、2 次 = 2 分、3–4 次 = 3 分……）。</p></div>
+    <div class="card cobalt"><p>三個分數串起來就是一個三位數代碼，例如 R=5、F=4、M=5 就是 <b style="font-size:2rem">「545」</b>。</p><p class="muted" style="margin-top:.5em">五分位法最多有 125 種組合。</p></div>
+  </div>
+</section>
+
+<!-- 9 Bob Stone 計分 -->
+<section class="slide">
+  <h1>RFM 模型 ─ 一定要用五等均分嗎？</h1>
+  <p class="lead" style="font-size:1.25rem;margin-bottom:1rem">Bob Stone 在《Successful Direct Marketing Methods》提出的 RFM 計分範例：三個指標各自換算成點數後<b>加總成總分</b>。</p>
+  <div class="row grow" style="align-items:stretch">
+    <div style="flex:1">
+      <p class="pill" style="margin-bottom:.5rem">Recency：依最後一次購買距今的時間給分</p>
+      <table class="compact">
+        <thead><tr><th>最後一次購買</th><th>點數</th></tr></thead>
+        <tbody>
+          <tr><td>3 個月內</td><td><b>24 分</b></td></tr>
+          <tr><td>3 到 6 個月</td><td>12 分</td></tr>
+          <tr><td>6 到 9 個月</td><td>6 分</td></tr>
+          <tr><td>9 到 12 個月</td><td>3 分</td></tr>
+          <tr><td>超過 12 個月</td><td>0 分</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col" style="flex:1.1">
+      <div class="card"><b>Frequency：每購買一次給 4 分</b><p style="font-size:1.6rem;font-weight:700;text-align:center;margin-top:.4rem;font-family:Georgia,'Noto Serif TC',serif"><i>F</i> = 購買次數 × 4</p></div>
+      <div class="card"><b>Monetary：購買金額的 10%，上限 9 分</b><p style="font-size:1.6rem;font-weight:700;text-align:center;margin-top:.4rem;font-family:Georgia,'Noto Serif TC',serif"><i>M</i> = min(購買金額 × 10%, 9)</p></div>
+      <div class="card cobalt" style="text-align:center"><p style="font-size:2rem;font-weight:900">RFM 總分 = <i>R</i> + <i>F</i> + <i>M</i></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 範例與設計邏輯 -->
+<section class="slide">
+  <h1>RFM 模型 ─ 範例與設計邏輯</h1>
+  <table class="compact" style="margin-bottom:1.2rem">
+    <thead><tr><th>顧客</th><th>最後購買</th><th>購買次數</th><th>總金額</th><th>R</th><th>F</th><th>M</th><th>總分</th></tr></thead>
+    <tbody>
+      <tr><td><b>A</b></td><td>2 個月前</td><td>3 次</td><td>$60</td><td>24</td><td>12</td><td>6</td><td><b style="color:var(--cobalt)">42</b></td></tr>
+      <tr><td><b>B</b></td><td>10 個月前</td><td>6 次</td><td>$200</td><td>3</td><td>24</td><td>9</td><td><b>36</b></td></tr>
+    </tbody>
+  </table>
+  <div class="row grow">
+    <div class="card amber" style="flex:.8"><p style="font-size:1.3rem">顧客 B 買得更多次、花得更多，總分卻較低 ── 因為 <b>Recency 的權重刻意設得最重</b>。</p></div>
+    <div class="card" style="flex:1.4">
+      <h2>設計邏輯</h2>
+      <ul style="font-size:1.1rem">
+        <li><b>Recency 權重最高：</b>3 個月內就有 24 分，反映「剛買過的人最可能再買」</li>
+        <li><b>Recency 對半遞減：</b>24 → 12 → 6 → 3，每隔一季打對折，模擬顧客熱度隨時間冷卻</li>
+        <li><b>Frequency 線性累加：</b>每次 4 分、無上限</li>
+        <li><b>Monetary 設上限：</b>避免一次性大額顧客把分數衝到最高</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 11 注意事項 -->
+<section class="slide">
+  <h1>RFM 模型 ─ 注意事項</h1>
+  <div class="grid3 grow" style="align-items:stretch">
+    <div class="card"><div style="font-size:2.6rem">🇺🇸</div><p style="font-size:1.25rem">這組數字是為<b>美國型錄郵購業</b>設計，金額單位是美元，套用到其他產業與幣別必須重新校準</p></div>
+    <div class="card"><div style="font-size:2.6rem">🎛️</div><p style="font-size:1.25rem">分析期間、Recency 級距、每次幾分、金額上限，都應依自身產業的<b>購買週期與客單價</b>調整</p></div>
+    <div class="card cobalt"><div style="font-size:2.6rem">💡</div><p style="font-size:1.25rem"><b>精神比數字重要：</b>用點數加總把三個指標合成一個排序依據，並讓 Recency 主導</p></div>
+  </div>
+</section>
+
+<!-- 12 前端後端 比喻 -->
+<section class="slide">
+  <h1>建構一個基礎的會員系統 ─ 前端與後端</h1>
+  <p class="lead" style="margin-bottom:1.2rem">一個比喻：餐廳 🍽️</p>
+  <div class="row grow" style="align-items:stretch">
+    <div class="card mint" style="display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:3.2rem">🪑🍽️</div>
+      <h2>前端 = 餐廳的用餐區</h2>
+      <p style="font-size:1.3rem">菜單、桌椅、裝潢、服務生。<b>顧客看得到、摸得到、直接互動</b>的部分。</p>
+    </div>
+    <div class="card amber" style="display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:3.2rem">👨‍🍳📦</div>
+      <h2>後端 = 廚房與倉庫</h2>
+      <p style="font-size:1.3rem">接單、烹調、備料、庫存管理。<b>顧客看不到，但沒有它什麼都端不出來</b>。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 13 前端 vs 後端 -->
+<section class="slide">
+  <h1>前端（Frontend）與後端（Backend）</h1>
+  <div class="row grow">
+    <div class="card">
+      <h2>🪟 前端（Frontend）</h2>
+      <p class="small">在使用者裝置上執行、使用者直接看到與操作的部分。執行位置：瀏覽器（網頁）或手機 App。</p>
+      <p style="margin-top:.6rem"><b>負責的事</b></p>
+      <ul style="font-size:1.05rem"><li>畫面呈現：排版、顏色、字體、動畫</li><li>使用者互動：點按鈕、填表單、拖曳、捲動</li><li>把使用者的操作轉成請求送給後端，再把回傳的資料顯示出來</li><li>基本的輸入檢查（例如 email 格式）</li></ul>
+      <p style="margin-top:.6rem"><b>核心技術</b></p>
+      <ul style="font-size:1.05rem"><li>HTML：結構｜CSS：樣式｜JavaScript：行為</li><li>框架：React、Vue、Angular、Svelte</li></ul>
+    </div>
+    <div class="card">
+      <h2>⚙️ 後端（Backend）</h2>
+      <p class="small">在伺服器上執行、使用者看不到，負責處理邏輯與資料的部分。執行位置：伺服器（可能是雲端的機器）。</p>
+      <p style="margin-top:.6rem"><b>負責的事</b></p>
+      <ul style="font-size:1.05rem"><li>商業邏輯：計算價格、判斷權限、執行流程</li><li>資料庫存取：新增、查詢、修改、刪除資料</li><li>身份驗證與授權：你是誰、你能做什麼</li><li>安全性：密碼加密、防止惡意請求</li><li>跟第三方服務串接：金流、簡訊、地圖 API</li></ul>
+      <p style="margin-top:.6rem"><b>核心技術</b></p>
+      <ul style="font-size:1.05rem"><li>語言：Python、Java、Node.js、Go、C#、PHP｜框架：Django、FastAPI、Spring、Express</li><li>資料庫：MySQL、PostgreSQL、MongoDB｜部署：Linux、Docker、雲端平台</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- 14 系統思維與後設思考 -->
+<section class="slide">
+  <h1>系統思維與後設思考</h1>
+  <div class="row grow" style="align-items:stretch">
+    <div class="card">
+      <h2>🪞 後設思考：我為什麼這樣想？</h2>
+      <p class="small">「後設思考」通常可用<b>後設認知（Metacognition）</b>來理解：知道自己懂什麼、不懂什麼，並檢查目前的方法是否有效。</p>
+      <ul style="margin-top:.8rem;line-height:1.8">
+        <li>我為什麼覺得好？因為符合需求，還是因為文字很有說服力？</li>
+        <li>我真的理解這個方案嗎？</li>
+        <li>哪些地方有證據，哪些只是推測？</li>
+        <li>如果發現新資料，我會不會改變判斷？</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>🕸️ 系統思維：這樣做，會影響哪些地方？</h2>
+      <p class="small"><b>系統思維（Systems Thinking）</b>是把問題放進整體環境，觀察不同人、資源與流程的連結，以及影響如何隨時間發展。</p>
+      <ul style="margin-top:.8rem;line-height:1.8">
+        <li>邀請對象是否合適？</li>
+        <li>預約流程是否方便？</li>
+        <li>顧客人數增加後，現有服務接得住嗎？</li>
+        <li>過度邀請，是否影響顧客未來的回覆意願？</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 15 六個核心要素 -->
+<section class="slide">
+  <h1>CRM 系統的六個核心要素</h1>
+  <table class="compact">
+    <thead><tr><th>要素</th><th>在做什麼</th><th>對應到今天的系統</th></tr></thead>
+    <tbody>
+      <tr><td><b>1. 顧客主檔</b></td><td>每位顧客唯一 ID 與基本屬性，是所有資料關聯的中心</td><td>客戶資料檔</td></tr>
+      <tr><td><b>2. 互動紀錄</b></td><td>顧客和你之間發生過的每一件事，最基本的是交易</td><td>交易記錄檔</td></tr>
+      <tr><td><b>3. 商品與服務主檔</b></td><td>讓紀錄「有名字」，才能回答「他買了什麼」</td><td>產品資料檔</td></tr>
+      <tr><td><b>4. 分群與標籤</b></td><td>把顧客分成可以採取不同行動的群，規則要能被業務人員調整</td><td>config + customers_rfm</td></tr>
+      <tr><td><b>5. 查詢與報表</b></td><td>單一顧客的全貌，以及整體與各群的比較</td><td>顧客查詢、統計報表分頁</td></tr>
+      <tr><td><b>6. 行動與追蹤</b></td><td>把名單交給能執行的人，並記錄系統做過什麼</td><td>名單匯出、建議行動、log 分頁</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 16 QR -->
+<section class="slide center">
+  <h1>建構一個基礎的會員系統</h1>
+  <p class="lead" style="font-size:2rem;font-weight:900;margin-bottom:1.5rem">大家掃掃看！你也可以做到 📱</p>
+  <img src="https://ai4taiwan.org.tw/wp-content/uploads/2026/11/snimg3JifWh.webp" alt="QR Code" style="width:18rem;height:18rem;border-radius:1.4rem;background:#fff;padding:.6rem;box-shadow:0 14px 40px rgba(22,33,58,.15)">
+  <a href="https://reurl.cc/rkWvak" target="_blank" rel="noopener" style="margin-top:1.4rem;font-size:1.6rem;font-weight:700;color:var(--cobalt)">https://reurl.cc/rkWvak</a>
+</section>
+
+<!-- 17 Prompt 0 -->
+<section class="slide">
+  <h1>透過 AI + Google Apps Script 建立會員系統</h1>
+  <div class="promptlabel"><i>Prompt 0</i>設定角色、規則與資料結構</div>
+  <div class="codebox"><button class="copy">複製</button>你是 Google Apps Script 專家，接下來我會分段請你寫程式，請遵守：
+- 只用 Google Apps Script（SpreadsheetApp、HtmlService），不要用 Node.js 或 npm 套件
+- 每次都給我完整可貼上的程式碼，不要只給片段
+- 註解用繁體中文
+- 原始的三張分頁只能讀取，不能修改，結果一律寫到新分頁
+
+我的 Google 試算表有三張分頁：
+
+1.「交易記錄檔」A~F 欄：交易編號、Date、ID、Product_ID、Quantity、Amount
+   範例：86 | 20060101 | "92 " | 2842 | 1 | 45
+   注意：Date 是 20060101 這種 8 位數整數，不是日期；
+   ID 是文字且後面有空白；同一個交易編號會有多列（一列一個商品）；Amount 有 0 元的贈品。
+   共 3,077 列，1,815 張不重複訂單，200 位顧客，日期範圍 2006/1/1 到 2007/12/31。
+
+2.「客戶資料檔」A~E 欄：客戶ID、Gender、Age、Zipcode、Area
+   範例：3596 | 男 | 37 | 247 | 北區。共 200 列，客戶ID 是數字。
+
+3.「產品資料檔」A~D 欄：Product_ID、Product、Category_ID、Category
+   範例：2760 | 國際黑1號池 | 40301 | 一般電池。共 1,130 列。
+
+先回覆「了解」就好，等我下一個指令。</div>
+</section>
+
+<!-- 18 Prompt 1 -->
+<section class="slide">
+  <h1>建構一個基礎的會員系統</h1>
+  <div class="promptlabel"><i>Prompt 1</i>算出 R、F、M</div>
+  <div class="codebox"><button class="copy">複製</button>請寫一個函式 calcRFM()：
+1. 讀取「交易記錄檔」，把 ID 去掉前後空白、Date 從 20060101 轉成真正的日期
+2. 以顧客為單位算出：最後購買日、F = 不重複交易編號的數量、M = Amount 總和
+3. R = 2008/1/1 減最後購買日的天數
+4. 寫到新分頁「customers_rfm」，欄位：客戶ID、最後購買日、R(天)、F(次)、M(元)，依 M 由大到小排序
+5. 另外加一個 onOpen()，在試算表上方加選單「RFM 分析」，裡面有「計算 RFM」可以執行 calcRFM
+
+驗收標準：customers_rfm 應該有 200 列；客戶 1686 的 F 是 78、M 是 494330、R 是 3。
+如果數字不對，最可能的原因是 F 用列數去算，或 ID 沒 trim。</div>
+</section>
+
+<!-- 19 Prompt 2 -->
+<section class="slide">
+  <h1>建構一個基礎的會員系統</h1>
+  <div class="promptlabel"><i>Prompt 2</i>五分位評分與客群規則</div>
+  <div class="codebox"><button class="copy">複製</button>請擴充 calcRFM()，在算完 R、F、M 之後：
+1. 五分位評分：把 200 位顧客依 R 排序後平均切成五份，R 最小的那一份給 5 分、最大的給 1 分；
+   F 和 M 相反，最大的給 5 分。結果存成 R分、F分、M分，並組成三位數的 RFM 字串例如 "543"。
+2. 客群規則從分頁「config」讀取，格式是第 4 列標題、第 5 列起每列一條規則：
+   客群名稱 | R分數最小 | R分數最大 | F分數最小 | F分數最大 | M分數最小 | M分數最大 | 建議行動
+   規則由上往下比對，第一條符合的就套用，都不符合的顧客歸「一般客」。
+3. 請另外寫 initConfig()，自動建立 config 分頁並填入這六條規則（依序）：
+   VIP 冠軍客 4 5 4 5 4 5 專屬禮遇
+   忠誠客 1 5 4 5 3 5 會員升級
+   新客 4 5 1 2 1 5 歡迎禮
+   潛力客 3 5 3 5 1 5 加購優惠
+   沉睡客 1 2 3 5 1 5 喚醒簡訊
+   流失客 1 2 1 2 1 5 低成本挽回
+4. customers_rfm 新增欄位：R分、F分、M分、RFM、客群、建議行動
+5. 把 initConfig 也加進「RFM 分析」選單
+
+請給我完整的 Code.gs。</div>
+</section>
+
+<!-- 20 Prompt 3 -->
+<section class="slide">
+  <h1>建構一個基礎的會員系統</h1>
+  <div class="promptlabel"><i>Prompt 3</i>網頁儀表板</div>
+  <div class="codebox"><button class="copy">複製</button>請做一個 Apps Script 網頁後台：
+1. Code.gs 加 doGet()，用 HtmlService 回傳 Index.html；
+   再加 getDashboardData()，讀 customers_rfm 回傳所有顧客陣列和各客群的人數與消費總額。
+2. Index.html 要有：
+   - 左邊：各客群人數的橫條圖（用 div 畫就好，不要用外部圖表套件），點客群可以篩選右邊名單
+   - 右邊：顧客表格，可以搜尋客戶ID、點欄位標題排序
+   - 一個「下載 CSV」按鈕，把目前篩選到的名單下載下來（CSV 開頭要加 BOM，Excel 才不會亂碼）
+3. 前端呼叫後端一律用 google.script.run.withSuccessHandler(...)，並處理錯誤
+4. 版面要能在手機上看，寬度小於 760px 時改成單欄
+5. 介面文字用繁體中文
+
+請分別給我完整的 Code.gs（包含前面所有函式）和完整的 Index.html。</div>
+</section>
+
+<!-- 21 Prompt 4a -->
+<section class="slide">
+  <h1>建構一個基礎的會員系統</h1>
+  <div class="promptlabel"><i>Prompt 4</i>顧客查詢分頁</div>
+  <div class="codebox"><button class="copy">複製</button>請在後台加第二個分頁「顧客查詢」：
+1. Code.gs 加 getCustomerDetail(id)：
+   - 從客戶資料檔找基本資料，找不到要回傳清楚的訊息
+   - 從交易記錄檔篩出這位顧客的所有列，用 Product_ID 關聯產品資料檔拿到商品名稱和品類
+   - 以訂單為單位整理：日期、單號、商品清單（商品名、品類、數量、金額）、該單總金額
+   - 回傳：消費總額、購買次數（訂單數）、每單平均、累計件數、首購日、最後購買日、
+     依金額排序的前五個常買品類、訂單清單（新到舊），以及這位顧客在 customers_rfm 的客群
+2. Index.html 上方加分頁切換「儀表板 / 顧客查詢」，用 hash（#dashboard、#customer）切換
+3. 顧客查詢頁：一個輸入框 + 查詢按鈕（按 Enter 也要能查），結果顯示上面那些數字，
+   訂單用 &lt;details&gt; 做成可展開，展開後是商品明細表格
+4. 儀表板名單裡的客戶ID 改成連結，點了直接切到顧客查詢並帶入查詢</div>
+</section>
+
+<!-- 22 Prompt 4b -->
+<section class="slide">
+  <h1>建構一個基礎的會員系統</h1>
+  <div class="promptlabel"><i>Prompt 5</i>統計報表分頁</div>
+  <div class="codebox"><button class="copy">複製</button>請在後台加第三個分頁「統計報表」：
+1. Code.gs 加 getStatsReport()：
+   - 先把交易記錄檔彙總成「一張訂單一列」：顧客ID、金額總和、數量總和、品項數
+   - 整體：訂單數、顧客數、總營收、每單平均金額、每單平均件數、每單平均品項數、每位顧客平均訂單數
+   - 各客群（依 customers_rfm 的客群）：顧客數、顧客占比、訂單數、營收、營收占比、
+     每單平均金額、每單平均件數、平均 F、平均 M、平均 R、依金額排序的前三個常買品類
+2. Index.html 的分頁切換加「統計報表」（#stats），第一次切進去才呼叫後端
+3. 頁面上半放整體數字的卡片，下半放各客群比較表，再用橫條圖畫各客群的每單平均金額和營收占比
+
+請給我完整的 Code.gs 和 Index.html。</div>
+</section>
+
+<!-- 23 DEBUG -->
+<section class="slide">
+  <h1>DEBUG ─ 出錯了怎麼問</h1>
+  <div class="promptlabel"><i>Prompt</i>除錯模板</div>
+  <div class="codebox" style="flex:0 1 auto"><button class="copy">複製</button>我執行後出現這個錯誤：
+（貼上執行記錄裡的紅字，或網頁上看到的訊息）
+
+出錯的程式碼在這裡：
+（貼上那個函式）
+
+請告訴我：1. 這個錯誤是什麼意思 2. 哪一行造成的 3. 修正後的完整函式。
+不要改動其他沒問題的函式。</div>
+  <div class="grid3" style="margin-top:1.2rem">
+    <div class="card"><b>① 錯誤訊息</b><p>貼原文，不要自己改寫</p></div>
+    <div class="card"><b>② 出錯的函式</b><p>整段貼，AI 才看得到上下文</p></div>
+    <div class="card"><b>③ 要求範圍</b><p>只修這一段，避免把其他好的程式改壞</p></div>
+  </div>
+</section>
+
+<!-- 24 結語 section -->
+<section class="slide section">
+  <h1>今天你做了一件<br>以前要花一個團隊做的事</h1>
+  <p><b>一開始</b>，你手上只有三張看不懂的試算表。<br><b>現在</b>，你有一個會自己算客群、能查任何一位顧客、能出報表的後台。</p>
+</section>
+
+<!-- 25 三個能力 -->
+<section class="slide">
+  <h1>你帶走的不是程式碼，是三個能力</h1>
+  <div class="steps grow" style="align-items:stretch;margin-top:1rem">
+    <div class="card"><h2>看穿資料的坑</h2><p>ID 的空白、不是日期的日期、重複的訂單列。以後拿到任何資料，你會<b>先懷疑再相信</b>。</p></div>
+    <div class="card"><h2>把需求說給 AI 聽</h2><p>你已經寫過六個 prompt，知道要<b>給結構、給坑、給驗收數字</b>。這套方法換到 Excel、Python、任何工具都一樣。</p></div>
+    <div class="card"><h2>從成品反推</h2><p>先看到後台長什麼樣，再拆回去理解，這比從零學語法<b>快十倍</b>。</p></div>
+  </div>
+</section>
+
+<!-- 26 回家後的行動 -->
+<section class="slide">
+  <h1>回家後的幾個行動</h1>
+  <div class="col grow" style="gap:1rem;justify-content:center">
+    <div class="card principle"><span class="num">1</span><div><b>換成你的資料</b><p>你打工的店、你社團的名單、你爸媽的客戶。欄位名稱換掉，Prompt 0 重寫一次，其他照跑。</p></div></div>
+    <div class="card principle"><span class="num">2</span><div><b>改一條規則</b><p>把 config 裡「沉睡客」的 R 分數改成 1 到 3，按重新計算，看看多了誰、少了誰，然後想一想哪個對。</p></div></div>
+    <div class="card principle"><span class="num">3</span><div><b>多加一個分頁</b><p>用 Prompt 4 的格式，請 AI 加「本月新客名單」或「品類銷售排行」。做出來的話，貼到群組給大家看。</p></div></div>
+  </div>
+</section>
+
+<!-- 27 結語 -->
+<section class="slide center" style="background:linear-gradient(160deg,#FFF8E8,#E8F0FF)">
+  <h1>結語</h1>
+  <p class="quote" style="font-size:2rem;line-height:1.8;max-width:38em;margin-top:1rem">資料分析不是會不會寫程式的問題，<br>是你願不願意對一個數字多問一句<b>「真的嗎」</b>。</p>
+  <img src="https://ai4taiwan.org.tw/wp-content/uploads/2025/04/ai4taiwan_long.svg" alt="AI for Taiwan" style="height:3.2rem;margin-top:3rem">
+</section>
+
+</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+function go(n,push=true){
+  cur=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
+  document.getElementById('counter').textContent=(cur+1)+' / '+slides.length;
+  document.getElementById('progress').style.width=((cur+1)/slides.length*100)+'%';
+  if(push) history.replaceState(null,'','#'+(cur+1));
+}
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();go(cur+1);}
+  if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+  if(e.key==='Home') go(0); if(e.key==='End') go(slides.length-1);
+});
+window.addEventListener('hashchange',()=>go(parseInt(location.hash.slice(1)||'1',10)-1,false));
+document.querySelectorAll('h1').forEach(h=>{h.innerHTML='<span class="hl">'+h.innerHTML+'</span>';});
+document.querySelectorAll('img').forEach(im=>im.addEventListener('error',()=>{
+  if(!im.closest('.slide')){im.style.display='none';return;}
+  const d=document.createElement('div');d.className='imgfail';d.textContent='圖片無法載入：'+im.alt;im.replaceWith(d);
+}));
+document.querySelectorAll('.codebox .copy').forEach(b=>b.onclick=async()=>{
+  const box=b.parentElement;const text=[...box.childNodes].filter(n=>n!==b).map(n=>n.textContent).join('').trim();
+  try{await navigator.clipboard.writeText(text);}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  b.textContent='已複製 ✓';setTimeout(()=>b.textContent='複製',1500);
+});
+window.addEventListener('load',()=>{ if(window.katex) document.querySelectorAll('.tex').forEach(el=>{try{katex.render(el.textContent,el,{displayMode:true})}catch(e){}}); });
+go(parseInt(location.hash.slice(1)||'1',10)-1,false);
+</script>
+</body>
+</html>
